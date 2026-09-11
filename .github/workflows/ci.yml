@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Rodar testes
+        env:
+          GEMINI_API_KEY: chave-falsa-para-teste
+          DATABASE_URL: postgresql://falso:falso@localhost:5432/falso
+          API_KEY: chave-de-teste
+        run: pytest -v
+
+  imagem:
+    runs-on: ubuntu-latest
+    needs: testes
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar build da imagem
+        run: docker build -t agente-matriculas:${{ github.sha }} .
